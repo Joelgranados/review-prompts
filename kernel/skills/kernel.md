@@ -1,7 +1,7 @@
 ---
 name: kernel
-description: Load anytime the working directory is a linux kernel tree, and always load it when you answer questions inside the kernel tree.  Linux Kernel knowledge, subsystem specific details, analysis, review, debugging protocols.  Read this anytime you're in the linux kernel tree
-invocation_policy: automatic
+description: Patch review, debugging, coccinelle & subsystem context.
+invocation_policy: manual
 ---
 
 ## ALWAYS READ 
