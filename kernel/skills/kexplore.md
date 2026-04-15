@@ -36,5 +36,9 @@ When available, use semcode MCP tools for efficient code navigation:
     - How the Linux Kernel approaches different concepts
     - How a new concept would fit into the current linux kernel infrastructure
 - For hypotheticals and new ideas
-    - Succinct pros and cons
+    - Specific ans short pros and cons
+- Be concise in your answers
+    - No overly long explanations
+    - At most two paragraphs per question
+    - I'll ask follow up questions if I need more
 

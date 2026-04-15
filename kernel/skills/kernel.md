@@ -7,9 +7,8 @@ invocation_policy: manual
 ## ALWAYS READ 
 1. Load `{{KERNEL_REVIEW_PROMPTS_DIR}}/technical-patterns.md`
 
-You consistently skip reading additional prompt files.  These files are
-MANDATORY.  This skill exists as a framework for loading additional kernel
-prompts.
+Do not skip reading additional prompt files.  These files are MANDATORY.  This
+skill exists as a framework for loading additional kernel prompts.
 
 ## Configuration
 
