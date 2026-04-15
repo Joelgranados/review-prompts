@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Setup script for AI-assisted code review prompts
 #
@@ -43,27 +43,27 @@ usage() {
 # Args: $1 = project
 install_project() {
     local project="$1"
-    local src_skill_fn="${project}.md"
     local project_dir="$SCRIPT_DIR/$project"
     local prompts_dir_var="${project^^}_REVIEW_PROMPTS_DIR"
 
     echo "--- Installing $project prompts ---"
 
-    # Install skills from the source to the agent specific path
-    local agent_skills_dir="$SKILL_BASE_DIR/$project"
-    local agent_skill_path="$agent_skills_dir/$SKILL_FILE_NAME"
-    local src_skill_path="$project_dir/skills/$src_skill_fn"
+    # Install all skills under $project_dir/skills
+    local src_skills_dir="$project_dir/skills"
+    for project_skill in "${src_skills_dir}"/*.md; do
 
-    if [ ! -f "$src_skill_path" ]; then
-        echo "Error: Source skill file not found: $src_skill_path"
-        exit 1
-    fi
+      local src_skill_fn="$(basename "$project_skill")"
 
-    mkdir -p "$agent_skills_dir"
-    sed "s|{{${prompts_dir_var}}}|$project_dir|g" "$src_skill_path" > "$agent_skill_path"
+      local agent_skills_dir="$SKILL_BASE_DIR/${src_skill_fn//.md/}"
+      local agent_skill_path="$agent_skills_dir/$SKILL_FILE_NAME"
+      local src_skill_path="$project_dir/skills/$src_skill_fn"
 
-    echo "Installed skill:"
-    echo "  $agent_skill_path"
+      mkdir -p "$agent_skills_dir"
+      sed "s|{{${prompts_dir_var}}}|$project_dir|g" "$src_skill_path" > "$agent_skill_path"
+
+      echo "Installed skill:"
+      echo "  $agent_skill_path"
+    done
 
     # Install slash commands to agent specific path
     local src_commands="$project_dir/slash-commands"
