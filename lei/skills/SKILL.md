@@ -14,7 +14,7 @@ kernel list) without a local mirror, via `-I <url>` (remote "external").
 ## Base command shape
 
 ```
-lei q -v -o <maildir> --dedupe=mid [-t] --no-save -I <url> "<term1>" ["<term2>" ...] ["rt:<range>"]
+lei q -v -o <maildir> --dedupe=mid [-t] --no-save --no-local --no-import-remote -I <url> "<term1>" ["<term2>" ...] ["rt:<range>"]
 ```
 
 - `-v` verbose (also echoes the exact curl command and URL — useful for debugging).
@@ -25,6 +25,8 @@ lei q -v -o <maildir> --dedupe=mid [-t] --no-save -I <url> "<term1>" ["<term2>" 
 - `-t` / `--threads` expand every match to its full thread. Pulls in a lot more
   mail than the raw match count suggests — see limits section below.
 - `--no-save` don't persist this as a saved search for `lei up`.
+- `--no-local` Limit operations to those requiring network access.
+- `--no-import-remote` Disable the default behavior of memoizing remote messages into the local store.
 - `-I <url>` include a remote external for this query only (doesn't require
   `lei add-external`).
 
@@ -33,22 +35,22 @@ lei q -v -o <maildir> --dedupe=mid [-t] --no-save -I <url> "<term1>" ["<term2>" 
 - Each **separate shell argument** becomes one term, ANDed together.
 - A **single argument containing spaces gets auto phrase-quoted** — lei wraps
   it in `"..."` before sending, so `"foo bar"` searches for the exact phrase
-  `foo bar`, not `foo AND bar`. (Confirmed via `LEI.pm`'s `query_argv_to_string`:
-  `s/(.*?)\b(\w+:)// ? qq{$1$2"$_"} : qq{"$_"}`.)
+  `foo bar`, not `foo AND bar`.
 - Field prefixes: `f:` (From), `s:` (Subject), `b:` (body), `t:`/`c:`/`tc:`
   (To/Cc/either), `L:` (list-id). A prefix glued to a quoted multi-word arg
   works, e.g. one shell arg `f:Jane Doe` → sent as `f:"Jane Doe"`.
-- Date filters: `rt:` (received-time, preferred), `dt:` (Date: header, can be
-  spoofed by sender), `d:` (alias). Relative form: `rt:1.year.ago..`,
-  `rt:2.weeks.ago..3.days.ago`, etc.
+- Date filters: `rt:` (received-time, preferred), `dt:` (Date: header).
+  Relative form: `rt:1.year.ago..`, `rt:2.weeks.ago..3.days.ago`. For date
+  filters always use Relative form and sanity-check the Date: span of what
+  comes back
+- **Never add your own quotes** — lei adds them. A pre-quoted `b:"foo bar"`
+  reaches the server as `b:""foo bar""`, which Xapian parses as garbage and
+  returns a large set of irrelevant hits. Write `b:foo bar`.
 
 ## `-n` / `--limit` — the main gotcha
 
 `-n NUM` / `--limit=NUM` (default 10000) **only constrains local Xapian
-sources** (your own `lei/store` or a locally-mirrored external). Verified in
-`LeiQuery.pm` (`mset_opt->{limit}`) vs `LeiXSearch.pm::query_remote_mboxrd`,
-whose request `@qform` never includes a limit param, and whose per-message
-callback (`each_remote_eml`) has no limit check at all.
+sources** (your own `lei/store` or a locally-mirrored external).
 
 **Consequence:** a pure `-I <url>` remote query ignores `-n` completely — the
 server streams back its *entire* match set (paginated internally, no fixed
@@ -71,10 +73,11 @@ bound a remote query, narrow the query itself:
 - To look up a specific message later: `lei q m:'<message-id>'` (no angle
   brackets needed) or browse `https://<host>/<list>/<message-id>/`.
 
-## Practical example (verified working)
+## Practical example
 
 ```
 lei q -v -o ~/Mail --dedupe=mid -t --no-save \
+  --no-local --no-import-remote \
   -I https://lore.kernel.org/all \
   "f:Jane Doe" "rt:1.year.ago.."
 ```
